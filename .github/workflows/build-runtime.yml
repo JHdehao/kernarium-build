@@ -86,17 +86,19 @@ jobs:
         working-directory: src
         run: |
           # 内核树必须在大小写敏感文件系统上，macOS runner 默认不是。
-          hdiutil create -size 40g -fs APFSX -volname kern -type SPARSE \
-            -quiet "$RUNNER_TEMP/kern.dmg"
-          hdiutil attach -quiet "$RUNNER_TEMP/kern.dmg"
-          echo "UML_KERNEL_SOURCE_DIR=/Volumes/kern/linux" > \
+          IMG="$RUNNER_TEMP/kern"
+          MNT="$RUNNER_TEMP/kern-mnt"
+          hdiutil create -size 40g -fs "Case-sensitive APFS" -type SPARSE \
+            -volname kern "$IMG"
+          hdiutil attach "$IMG.sparseimage" -mountpoint "$MNT"
+          echo "UML_KERNEL_SOURCE_DIR=$MNT/linux" > \
             kernel/mainline-6.18/source-location.conf
           ./kernel/mainline-6.18/scripts/prepare-source.sh
           ./kernel/mainline-6.18/build/build-kernel.sh \
-            --slice arm64 --build /Volumes/kern/build-arm64 --jobs 4
+            --slice arm64 --build "$MNT/build-arm64" --jobs 4
           ./kernel/mainline-6.18/build/publish-artifact.py \
-            --source /Volumes/kern/linux \
-            --build /Volumes/kern/build-arm64 \
+            --source "$MNT/linux" \
+            --build "$MNT/build-arm64" \
             --slice arm64 \
             --output-root .build/kernel/artifacts \
             --release-id 20261119-6.18.60-ca1 \

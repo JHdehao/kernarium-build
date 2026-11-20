@@ -31,9 +31,21 @@ jobs:
       - name: 工具链信息
         run: |
           sw_vers
+          ls -d /Applications/Xcode*.app || true
           xcodebuild -version
           df -h /
           sysctl -n hw.ncpu
+
+      - name: 选用 Xcode 27（若 runner 提供）
+        run: |
+          for cand in /Applications/Xcode_27*.app /Applications/Xcode-beta.app; do
+            if [ -d "$cand" ]; then
+              echo "切换到 $cand"
+              sudo xcode-select -s "$cand"
+              break
+            fi
+          done
+          xcodebuild -version
 
       - name: 安装 Metal 工具链
         run: xcodebuild -downloadComponent MetalToolchain || true

@@ -114,7 +114,7 @@ jobs:
             --source "$MNT/linux" \
             --build "$MNT/build-arm64" \
             --slice arm64 \
-            --output-root .build/kernel/artifacts \
+            --output-root "$PWD/.build/kernel/artifacts" \
             --release-id 20261119-6.18.60-ca1 \
             --objcopy "$(xcrun --find llvm-objcopy)"
 

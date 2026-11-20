@@ -13,7 +13,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-27
+    runs-on: macos-26
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
@@ -158,6 +158,14 @@ jobs:
           sed -i '' "s|^UML_BOOT_BASE_SIZE=.*|UML_BOOT_BASE_SIZE=$(wc -c < "$OUT" | tr -d ' ')|" "$DESC"
           sed -i '' "s|^UML_BOOT_BASE_SHA256=.*|UML_BOOT_BASE_SHA256='$(shasum -a 256 "$OUT" | awk '{print $1}')'|" "$DESC"
           cat "$DESC"
+
+      - name: 兼容旧版 SDK
+        working-directory: src
+        run: |
+          # 作者的音频代码用 iOS 27 SDK 的新 AVFoundation API；Xcode 26 的 SDK
+          # 没有，源码里已有 #else 旧路径，这里把 27 的版本判断压下去。
+          find darwin/device/audio -name '*.mm' -exec sed -i '' 's/>= 270000/>= 999999/g' {} +
+          grep -rn "999999" darwin/device/audio | head -10
 
       - name: 配置 runtime
         working-directory: src

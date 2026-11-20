@@ -171,7 +171,7 @@ jobs:
         working-directory: src
         run: |
           # 上游打包脚本强制要 Android runtime；Conch 只要 device 的 .framework。
-          OUT="$RUNNER_TEMP/frameworks"
+          OUT="artifacts"
           mkdir -p "$OUT"
           cp -R .build/kernarium-runtime-ios-device/Kernarium/Runtime/*.framework "$OUT/"
           cp -R .build/dependencies/apple-gpu-vulkan-experiment/ios-device-arm64/Frameworks/*.framework "$OUT/"
@@ -182,6 +182,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kernarium-frameworks
-          path: ${{ runner.temp }}/frameworks
+          path: src/artifacts
           retention-days: 14
-          compression-level: 1

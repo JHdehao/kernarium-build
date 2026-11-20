@@ -74,6 +74,33 @@ jobs:
           ./dependencies/build-ios-storage.sh
           ./dependencies/build-ios-zstd.sh
 
+      - name: 内核宿主工具
+        working-directory: src
+        run: |
+          ./dependencies/prepare.sh --archive-manifest \
+            dependencies/kernel-host-tools/archives.tsv
+          ./dependencies/build-kernel-host-tools.sh
+
+      - name: 内核源码与构建
+        working-directory: src
+        run: |
+          # 内核树必须在大小写敏感文件系统上，macOS runner 默认不是。
+          hdiutil create -size 40g -fs APFSX -volname kern -type SPARSE \
+            -quiet "$RUNNER_TEMP/kern.dmg"
+          hdiutil attach -quiet "$RUNNER_TEMP/kern.dmg"
+          echo "UML_KERNEL_SOURCE_DIR=/Volumes/kern/linux" > \
+            kernel/mainline-6.18/source-location.conf
+          ./kernel/mainline-6.18/scripts/prepare-source.sh
+          ./kernel/mainline-6.18/build/build-kernel.sh \
+            --slice arm64 --build /Volumes/kern/build-arm64 --jobs 4
+          ./kernel/mainline-6.18/build/publish-artifact.py \
+            --source /Volumes/kern/linux \
+            --build /Volumes/kern/build-arm64 \
+            --slice arm64 \
+            --output-root .build/kernel/artifacts \
+            --release-id 20261119-6.18.60-ca1 \
+            --objcopy "$(xcrun --find llvm-objcopy)"
+
       - name: 配置 runtime
         working-directory: src
         run: cmake --preset kernarium-ios-device

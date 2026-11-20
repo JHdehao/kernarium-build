@@ -164,8 +164,11 @@ jobs:
         run: |
           # 作者的音频代码用 iOS 27 SDK 的新 AVFoundation API；Xcode 26 的 SDK
           # 没有，源码里已有 #else 旧路径，这里把 27 的版本判断压下去。
-          find darwin/device/audio -name '*.mm' -exec sed -i '' 's/>= 270000/>= 999999/g' {} +
-          grep -rn "999999" darwin/device/audio | head -10
+          find darwin/device/audio -name '*.mm' -exec sed -i.bak 's/>= 270000/>= 999999/g' {} +
+          find darwin/device/audio -name '*.bak' -delete
+          hits=$(grep -rc '999999' darwin/device/audio | awk -F: '{s+=$2} END{print s+0}')
+          echo "改为旧分支的判定处数: $hits"
+          [ "$hits" -gt 0 ] || { echo "补丁未生效"; exit 1; }
 
       - name: 配置 runtime
         working-directory: src

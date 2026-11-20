@@ -38,12 +38,12 @@ jobs:
           brew install meson ninja bison flex pkgconf python@3.12
           echo "$(brew --prefix bison)/bin" >> "$GITHUB_PATH"
           echo "$(brew --prefix flex)/bin" >> "$GITHUB_PATH"
-          echo "$(brew --prefix python@3.12)/bin" >> "$GITHUB_PATH"
-          "$(brew --prefix python@3.12)/bin/python3" -m pip install --user \
-            --break-system-packages mako packaging pyyaml || \
-          "$(brew --prefix python@3.12)/bin/python3" -m pip install --user mako packaging pyyaml
-          meson --version
-          bison --version | head -1
+          echo "$(brew --prefix python@3.12)/libexec/bin" >> "$GITHUB_PATH"
+          PY="$(brew --prefix)/bin/python3.12"
+          "$PY" -m pip install --user --break-system-packages mako packaging pyyaml
+          "$PY" --version
+          "$(brew --prefix)/bin/meson" --version
+          "$(brew --prefix bison)/bin/bison" --version | head -1
 
       - name: 准备依赖源码
         working-directory: src

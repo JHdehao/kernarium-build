@@ -71,6 +71,13 @@ jobs:
           "$(brew --prefix)/bin/meson" --version
           "$(brew --prefix bison)/bin/bison" --version | head -1
 
+      - name: 上游镜像兜底
+        run: |
+          # gitlab.gnome.org 的 Gitaly 偶发长时间 503；glib 在 GitHub 有官方镜像，
+          # 同一提交可用，全局重写避免依赖准备被上游故障卡住。
+          git config --global url."https://github.com/GNOME/glib.git".insteadOf \
+            "https://gitlab.gnome.org/GNOME/glib.git"
+
       - name: 准备依赖源码
         working-directory: src
         run: |

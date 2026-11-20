@@ -54,6 +54,11 @@ jobs:
             's|^APPLE_GPU_TOOL_PATH=/usr/bin:/bin:/usr/sbin:/sbin$|APPLE_GPU_TOOL_PATH=/opt/homebrew/opt/bison/bin:/opt/homebrew/opt/flex/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin|' \
             dependencies/build-apple-gpu.sh
           grep -n '^APPLE_GPU_TOOL_PATH=' dependencies/build-apple-gpu.sh
+          # iOS SDK 的 <endian.h> 不提供 glibc 的 __BYTE_ORDER，Mesa 的
+          # u_endian.h 会报「端序未定义」。交叉文件里显式声明小端。
+          sed -i '' "s|'-I\$STAGE/include']|'-I\$STAGE/include', \"-DUTIL_ARCH_LITTLE_ENDIAN=1\", \"-DUTIL_ARCH_BIG_ENDIAN=0\"]|g" \
+            dependencies/build-apple-gpu.sh
+          grep -c 'UTIL_ARCH_LITTLE_ENDIAN' dependencies/build-apple-gpu.sh
           ./dependencies/prepare.sh --product apple-gpu-vulkan-experiment
 
       - name: 构建 GPU 依赖

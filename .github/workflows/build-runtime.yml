@@ -93,9 +93,16 @@ jobs:
       - name: 构建网络/存储/压缩依赖
         working-directory: src
         run: |
-          ./dependencies/prepare.sh --product ios-network
-          ./dependencies/prepare.sh --product ios-storage
-          ./dependencies/prepare.sh --product ios-compression
+          retry() {
+            for i in 1 2 3 4 5 6; do
+              if "$@"; then return 0; fi
+              echo "第 $i 次失败，30 秒后重试"; sleep 30
+            done
+            return 1
+          }
+          retry ./dependencies/prepare.sh --product ios-network
+          retry ./dependencies/prepare.sh --product ios-storage
+          retry ./dependencies/prepare.sh --product ios-compression
           ./dependencies/build-ios-network.sh --platform ios
           ./dependencies/build-ios-storage.sh
           ./dependencies/build-ios-zstd.sh

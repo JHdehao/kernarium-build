@@ -78,7 +78,12 @@ jobs:
       - name: 内核宿主工具
         working-directory: src
         run: |
-          ./dependencies/prepare.sh --product kernel-host-tools
+          ok=0
+          for attempt in 1 2 3 4 5 6; do
+            if ./dependencies/prepare.sh --product kernel-host-tools; then ok=1; break; fi
+            echo "第 $attempt 次准备失败，30 秒后重试"; sleep 30
+          done
+          [ "$ok" = 1 ] || { echo "宿主工具源码准备失败"; exit 1; }
           ./dependencies/prepare.sh --archive-manifest \
             dependencies/kernel-host-tools/archives.tsv
           ./dependencies/build-kernel-host-tools.sh

@@ -117,6 +117,15 @@ jobs:
             --output-root "$PWD/.build/kernel/artifacts" \
             --release-id 20261119-6.18.60-ca1 \
             --objcopy "$(xcrun --find llvm-objcopy)"
+          # 本地重放的 commit 与作者发布的不同（树相同），把描述文件对齐到
+          # 实际产物的 release 标识，CMake 才能导入。
+          REL=$(grep -rhoE '6\.18\.[0-9]+-g[0-9a-f]{12}' \
+            "$PWD/.build/kernel/artifacts" | head -1)
+          echo "kernel release: $REL"
+          [ -n "$REL" ] || { echo "没找到内核 release 标识"; exit 1; }
+          sed -i '' "s|^UML_KERNEL_ARTIFACT_RELEASE=.*|UML_KERNEL_ARTIFACT_RELEASE='$REL'|" \
+            kernel/mainline-6.18/artifacts/accepted-4k.env
+          grep -n 'ARTIFACT_RELEASE=' kernel/mainline-6.18/artifacts/accepted-4k.env
 
       - name: 配置 runtime
         working-directory: src

@@ -77,8 +77,9 @@ jobs:
       - name: 内核宿主工具
         working-directory: src
         run: |
+          ./dependencies/prepare.sh --product kernel-host-tools
           ./dependencies/prepare.sh --archive-manifest \
-            dependencies/kernel-host-tools/archives.tsv
+            kernel-host-tools/archives.tsv
           ./dependencies/build-kernel-host-tools.sh
 
       - name: 内核源码与构建

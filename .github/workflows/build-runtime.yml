@@ -47,7 +47,14 @@ jobs:
 
       - name: 准备依赖源码
         working-directory: src
-        run: ./dependencies/prepare.sh --product apple-gpu-vulkan-experiment
+        run: |
+          # build-apple-gpu.sh 的 env -i 只给 /usr/bin:/bin:/usr/sbin:/sbin，
+          # macOS 自带 bison 2.3 解析不了 Mesa 的 GLSL 语法，换 Homebrew 的。
+          sed -i '' \
+            's|^APPLE_GPU_TOOL_PATH=/usr/bin:/bin:/usr/sbin:/sbin$|APPLE_GPU_TOOL_PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin|' \
+            dependencies/build-apple-gpu.sh
+          grep -n '^APPLE_GPU_TOOL_PATH=' dependencies/build-apple-gpu.sh
+          ./dependencies/prepare.sh --product apple-gpu-vulkan-experiment
 
       - name: 构建 GPU 依赖
         working-directory: src

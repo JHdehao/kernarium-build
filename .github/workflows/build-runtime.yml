@@ -1,0 +1,67 @@
+name: Build Kernarium iOS runtime
+
+# 在 GitHub 的 macOS runner 上构建 Kernarium 的 iOS runtime 与 GPU 框架。
+# 本机是 Linux，仓库的 GPU 依赖硬性要求 macOS 工具链（Meson 的
+# appleframework 依赖、Metal Toolchain），只能借 macOS 机器跑一次。
+on:
+  workflow_dispatch:
+    inputs:
+      jobs:
+        description: 并行任务数
+        required: false
+        default: "4"
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 360
+    steps:
+      - name: 取上游源码
+        run: |
+          git clone --depth 1 https://github.com/imxieyi/Kernarium.git src
+          cd src
+          git config user.name "Kernarium CI"
+          git config user.email "ci@kernarium.invalid"
+
+      - name: 工具链信息
+        run: |
+          sw_vers
+          xcodebuild -version
+          df -h /
+          sysctl -n hw.ncpu
+
+      - name: 安装 Metal 工具链
+        run: xcodebuild -downloadComponent MetalToolchain || true
+
+      - name: 准备依赖源码
+        working-directory: src
+        run: ./dependencies/prepare.sh --product apple-gpu-vulkan-experiment
+
+      - name: 构建 GPU 依赖
+        working-directory: src
+        run: ./dependencies/build-apple-gpu.sh --platform ios --jobs "${{ inputs.jobs }}"
+
+      - name: 配置 runtime
+        working-directory: src
+        run: cmake --preset kernarium-ios-device
+
+      - name: 构建 runtime
+        working-directory: src
+        run: cmake --build --preset kernarium-ios-device
+
+      - name: 打包框架
+        working-directory: src
+        run: Kernarium/scripts/package-ios-frameworks.sh --sdk device
+
+      - name: 列出产物
+        run: |
+          find src/.build/kernarium-xcframeworks -maxdepth 2 -type d | head -20
+          du -sh src/.build/kernarium-xcframeworks
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernarium-xcframeworks
+          path: src/.build/kernarium-xcframeworks
+          retention-days: 14
+          compression-level: 1

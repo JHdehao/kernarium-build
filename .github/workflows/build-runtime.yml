@@ -79,7 +79,7 @@ jobs:
         run: |
           ./dependencies/prepare.sh --product kernel-host-tools
           ./dependencies/prepare.sh --archive-manifest \
-            kernel-host-tools/archives.tsv
+            dependencies/kernel-host-tools/archives.tsv
           ./dependencies/build-kernel-host-tools.sh
 
       - name: 内核源码与构建

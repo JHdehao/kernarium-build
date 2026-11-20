@@ -16,6 +16,8 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 360
     steps:
+      - uses: actions/checkout@v4
+
       - name: 取上游源码
         run: |
           git clone --depth 1 https://github.com/imxieyi/Kernarium.git src
@@ -126,6 +128,19 @@ jobs:
           sed -i '' "s|^UML_KERNEL_ARTIFACT_RELEASE=.*|UML_KERNEL_ARTIFACT_RELEASE='$REL'|" \
             kernel/mainline-6.18/artifacts/accepted-4k.env
           grep -n 'ARTIFACT_RELEASE=' kernel/mainline-6.18/artifacts/accepted-4k.env
+
+      - name: 引导基础 initramfs
+        working-directory: src
+        run: |
+          OUT="$RUNNER_TEMP/uml-boot-base-aarch64.cpio.gz"
+          "$GITHUB_WORKSPACE/tools/make-boot-base.sh" "$OUT"
+          DEST=".build/rootfs/starter-20261121-boot-base-r1"
+          mkdir -p "$DEST"
+          cp "$OUT" "$DEST/"
+          DESC=tools/rootfs/boot-ramdisk/accepted-aarch64.env
+          sed -i '' "s|^UML_BOOT_BASE_SIZE=.*|UML_BOOT_BASE_SIZE=$(wc -c < "$OUT" | tr -d ' ')|" "$DESC"
+          sed -i '' "s|^UML_BOOT_BASE_SHA256=.*|UML_BOOT_BASE_SHA256='$(shasum -a 256 "$OUT" | awk '{print $1}')'|" "$DESC"
+          cat "$DESC"
 
       - name: 配置 runtime
         working-directory: src

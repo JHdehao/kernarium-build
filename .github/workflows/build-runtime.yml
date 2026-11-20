@@ -64,6 +64,16 @@ jobs:
         working-directory: src
         run: ./dependencies/build-apple-gpu.sh --platform ios --jobs "${{ inputs.jobs }}"
 
+      - name: 构建网络/存储/压缩依赖
+        working-directory: src
+        run: |
+          ./dependencies/prepare.sh --product ios-network
+          ./dependencies/prepare.sh --product ios-storage
+          ./dependencies/prepare.sh --product ios-compression
+          ./dependencies/build-ios-network.sh --platform ios
+          ./dependencies/build-ios-storage.sh
+          ./dependencies/build-ios-zstd.sh
+
       - name: 配置 runtime
         working-directory: src
         run: cmake --preset kernarium-ios-device

@@ -160,7 +160,7 @@ jobs:
           cat "$DESC"
 
       - name: 兼容旧版 SDK
-        run: python3 "$GITHUB_WORKSPACE/tools/old-sdk-audio.py" "$GITHUB_WORKSPACE/src"
+        run: python3 "$GITHUB_WORKSPACE/tools/patch-audio-ios26.py" "$GITHUB_WORKSPACE/src"
 
       - name: 配置 runtime
         working-directory: src

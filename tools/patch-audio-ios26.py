@@ -130,3 +130,16 @@ patch(
             return OutputStart::running;""",
 )
 print("第二批完成")
+
+# 第三批：不再被使用的 error 变量（-Werror=unused-variable）。
+for name in ("apple_playback_sink.mm", "apple_microphone_input.mm"):
+    path = root / name
+    text = path.read_text()
+    count = text.count("NSError* error = nil;")
+    if count:
+        text = text.replace(
+            "NSError* error = nil;",
+            "NSError* __attribute__((unused)) error = nil;",
+        )
+        path.write_text(text)
+        print(f"{name}: {count} 个 error 变量标记为可能未使用")

@@ -92,3 +92,41 @@ wrap_off(
     2,
 )
 print("完成")
+
+# 第二批：Xcode 26 SDK 的其余音频 API 差异。
+patch(
+    "apple_playback_sink.mm",
+    """                NSError* connectError = nil;
+                if (![engine_ connect:player_
+                                   to:engine_.mainMixerNode
+                               format:format_
+                                error:&connectError]) {
+                    configured_ = false;
+                    prepared_ = false;
+                    running_ = false;
+                    fault("the engine would not connect");
+                    return false;
+                }""",
+    """                /* Xcode 26 的 connect:to:format: 不返回错误。 */
+                [engine_ connect:player_
+                             to:engine_.mainMixerNode
+                         format:format_];""",
+)
+patch(
+    "apple_playback_sink.mm",
+    "                          (void)[player playAndReturnError:&error];",
+    "                          [player play];",
+)
+patch(
+    "apple_playback_sink.mm",
+    "            playing = [player_ playAndReturnError:&error];",
+    "            [player_ play];\n            playing = true;",
+)
+patch(
+    "apple_playback_sink.mm",
+    """            if ([player_ playAndReturnError:&error])
+                return OutputStart::running;""",
+    """            [player_ play];
+            return OutputStart::running;""",
+)
+print("第二批完成")

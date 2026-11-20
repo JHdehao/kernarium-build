@@ -167,19 +167,21 @@ jobs:
         working-directory: src
         run: cmake --build --preset kernarium-ios-device
 
-      - name: 打包框架
+      - name: 收集框架
         working-directory: src
-        run: Kernarium/scripts/package-ios-frameworks.sh --sdk device
-
-      - name: 列出产物
         run: |
-          find src/.build/kernarium-xcframeworks -maxdepth 2 -type d | head -20
-          du -sh src/.build/kernarium-xcframeworks
+          # 上游打包脚本强制要 Android runtime；Conch 只要 device 的 .framework。
+          OUT="$RUNNER_TEMP/frameworks"
+          mkdir -p "$OUT"
+          cp -R .build/kernarium-runtime-ios-device/Kernarium/Runtime/*.framework "$OUT/"
+          cp -R .build/dependencies/apple-gpu-vulkan-experiment/ios-device-arm64/Frameworks/*.framework "$OUT/"
+          ls -d "$OUT"/*.framework
+          du -sh "$OUT"
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
-          name: kernarium-xcframeworks
-          path: src/.build/kernarium-xcframeworks
+          name: kernarium-frameworks
+          path: ${{ runner.temp }}/frameworks
           retention-days: 14
           compression-level: 1
